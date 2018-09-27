@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+    		http://www.springframework.org/schema/beans
+    		http://www.springframework.org/schema/beans/spring-beans.xsd
+      	http://www.springframework.org/schema/context
+      	http://www.springframework.org/schema/context/spring-context.xsd
+      	http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+
+	<!-- 1,包扫描 -->
+	<context:component-scan
+		base-package="top.zhonglinhao.mapper, top.zhonglinhao.service"></context:component-scan>
+
+	<!-- 2,加载数据库连接配置文件：解决数据库配置硬编码的问题 -->
+	<context:property-placeholder location="classpath:db.properties"/>
+	
+	<!-- 3,数据源配置，使用c3p0连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${driver}"></property>
+		<property name="jdbcUrl" value="${url}"></property>
+		<property name="user" value="${username}"></property>
+		<property name="password" value="${password}"></property>
+
+		<!-- 连接池中保留的最大连接数，默认为15 -->
+		<property name="maxPoolSize" value="${c3p0.pool.maxPoolSize}"></property>
+		<!-- 连接池中默认的最小连接数，默认为15 -->
+		<property name="minPoolSize" value="${c3p0.pool.minPoolSize}"></property>
+		<!-- 初始化时创建的连接数 -->
+		<property name="initialPoolSize" value="${c3p0.pool.initialPoolSize}"></property>
+		<!-- 定义从数据库获取新连接失败后重复尝试获取的次数，默认为30 -->
+		<property name="acquireIncrement" value="${c3p0.pool.acquireIncrement}"></property>
+	</bean>
+	
+	<!-- 4，配置sqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 整合MyBatis，包扫描Mapper文件 -->
+		<property name="configLocation" value="classpath:SqlMapConfig.xml"></property>
+		<property name="mapperLocations" value="classpath:top/zhonglinhao/mapper/*.xml"></property>
+	</bean>
+	
+	<!-- 5,Mapper动态代理扫描 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="top.zhonglinhao.mapper"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	</bean>
+	
+	<!-- 6,事务管理 -->
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<!-- 7,事务增强 -->
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="find*" read-only="false" />
+			<tx:method name="get*" read-only="false" />
+			<tx:method name="view*" read-only="false" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- 8,AOP配置，拦截方法，应用事务增强 -->
+	<aop:config>
+		<!-- 定义切入点——拦截哪些方法 -->
+		<aop:pointcut expression="execution(* top.zhonglinhao.service.*.*(..))"
+			id="txPointcut" />
+		<!-- 应用事务增强 -->
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut" />
+	</aop:config>
+
+</beans>

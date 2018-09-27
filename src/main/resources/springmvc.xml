@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+    		http://www.springframework.org/schema/beans
+    		http://www.springframework.org/schema/beans/spring-beans.xsd
+      	http://www.springframework.org/schema/context
+      	http://www.springframework.org/schema/context/spring-context.xsd
+      	http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+				http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+        
+        <!-- 1,开启注解驱动 -->
+        <!-- 
+        开启注解驱动之后，就不需要再xml配置文件中配置控制器和处理器映射器了。
+        		1)置控制器是为了将控制器注入到ioc容器中
+        		2)配置处理器映射器是将请求的uri映射到Controller方法中
+        		3)另外，如果开启了注解驱动之后，也无需再配置处理器适配器了。
+        		所谓的处理器适配器，就是指定以何种方式实现并执行Handler。
+         -->
+        <mvc:annotation-driven></mvc:annotation-driven>
+        
+        <!-- 2，配置包扫描，扫描Controller包，配置的相当于是控制器 -->
+        <context:component-scan base-package="top.zhonglinhao.controller"></context:component-scan>
+        
+        <!-- 3，配置视图解析器，常用的视图解析器为InternalResourceViewResolver -->
+        <bean id="jspViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        		<property name="prefix" value="/WEB-INF/test/"></property>
+        		<property name="suffix" value=".jsp"></property>
+        </bean>
+
+</beans>
